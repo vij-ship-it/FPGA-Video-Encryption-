@@ -1,7 +1,7 @@
-"""Cost of the post-quantum session key (link/keys.py, link/kex.py) on this machine.
+"""Cost of the post-quantum session key (software/link/keys.py, software/link/kex.py) on this machine.
 
     python experiments/pq_kex_cost.py                 # laptop
-    python3 experiments/pq_kex_cost.py --runs 20      # on the PYNQ-Z2 (ARM Cortex-A9): the number for the paper
+    python3 experiments/pq_kex_cost.py --runs 20      # on the PYNQ-Z2 (ARM Cortex-A9): the reported number
 
 Times (median of --runs, wall clock) each end's work: the receiver's M1 (ML-KEM-768 key generation +
 X25519 key) and finish (decapsulation + X25519), the sender's answer (encapsulation + X25519), for every
@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT), str(ROOT / "software")]
 from link import keys  # noqa: E402
 
 PSK = bytes(range(16))

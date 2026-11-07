@@ -1,5 +1,5 @@
-"""One contract, two views: model/hw.py (stage-level, drives the RTL testbenches)
-must produce exactly the same bytes as model/jpeg.py (frame-level golden model).
+"""One contract, two views: software/model/hw.py (stage-level, drives the RTL testbenches)
+must produce exactly the same bytes as software/model/jpeg.py (frame-level golden model).
 
 If this file fails, the RTL tests and the system simulation would be checking
 against different "truths" -- which is exactly the bug that contract v2 fixed.
@@ -145,7 +145,7 @@ def test_nonce_purposes_differ():
 # ------------------------------------------------- contract v3 (parallel lanes)
 @pytest.mark.parametrize("kind,w,h", [("scene", 64, 80), ("noise", 48, 32), ("bars", 16, 64)])
 def test_v3_hw_view_equals_golden_frame(kind, w, h):
-    """encode_frame_v3 (drives tb/test_lanes_top.py) == jpeg.encode_frame(segmented=True).
+    """encode_frame_v3 (drives hardware/tb/test_lanes_top.py) == jpeg.encode_frame(segmented=True).
     E5: the fabric's frame (raster order) + the ARM's permutation (hw.arm_shuffle) == the golden frame."""
     img = make_image(w, h, kind, seed=w * h)
     for mode in range(6):
@@ -232,7 +232,7 @@ def test_v3_e5_segments_are_mcus_permuted_per_frame_and_authenticated():
 
 
 def test_v3_eavesdropper_sees_exactly_what_it_sees_in_v2():
-    """The replacement attack (the dashboard's eavesdropper view, link/channel.py) on a contract-v3 frame
+    """The replacement attack (the dashboard's eavesdropper view, software/link/channel.py) on a contract-v3 frame
     must decode, and give the same pixels as on the v2 frame: encrypted fields are replaced by fixed
     guesses and clear fields are equal, so the restart segments must not change the picture. Before
     17 Oct the attack decoded a v3 scan as one block and the eavesdropper view stayed empty."""
@@ -250,7 +250,7 @@ def test_hardware_e5_gives_the_eavesdropper_the_same_replacement_picture_as_mode
     """E5 in contract v3 (one keystream per MCU segment, tag over raster order) and the model's E5 of
     contract v2 send the MCUs in the same keyed order and encrypt the same fields, so the replacement
     attack -- the picture the jigsaw, chosen-plaintext and recognition experiments start from -- is
-    pixel-identical. That is why the paper's E5 security results carry over to the hardware form."""
+    pixel-identical. That is why the E5 security results carry over to the hardware form."""
     from model.jpeg import decode_pixels, replacement_attack_jpeg
     for kind in ("scene", "noise", "bars"):
         img = make_image(96, 64, kind, seed=3)

@@ -1,4 +1,4 @@
-"""Sign-bit recovery attack (Lin et al., JVCIR 2024, refs.bib lin2024) against the protection levels.
+"""Sign-bit recovery attack (Lin et al., J. Vis. Commun. Image Represent. 98, 104045, 2024) against the protection levels.
 
     python experiments/sign_recovery.py                                  # scikit-image test photos
     python experiments/sign_recovery.py --video data/kodak --frames 24 --stride 1 --name kodak
@@ -27,9 +27,9 @@ Check of the implementation (rows LinU3 / LinU6): Lin et al.'s own setting on th
 signs of the first U AC coefficients in zig-zag order unknown. Their method recovers most of those signs;
 ours must too before its E1-E4 numbers mean anything.
 
-Metrics, against the original luma: SSIM, edge correlation (Pearson of Sobel magnitudes, the paper's
+Metrics, against the original luma: SSIM, edge correlation (Pearson of Sobel magnitudes, the leakage
 leakage measure) and, for E1/E2, the share of AC signs recovered (weighted by |c|). Compared with the
-two attacker views the paper already reports: the no-key decode and the replacement attack.
+two attacker views already reported in results/: the no-key decode and the replacement attack.
 Writes sim_out/sign_recovery/<name>.json / .md.
 """
 import argparse
@@ -47,7 +47,7 @@ from scipy.optimize import linprog
 from skimage.metrics import structural_similarity
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT), str(ROOT / "software")]
 sys.path.insert(0, str(ROOT / "experiments"))
 from model.container import parse_jpeg                                   # noqa: E402
 from model.entropy import COMP_OF_BLOCK, ZIGZAG, huffman_decode          # noqa: E402

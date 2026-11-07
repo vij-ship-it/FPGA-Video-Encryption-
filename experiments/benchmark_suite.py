@@ -9,7 +9,7 @@ attacker below sees only what the network carries (Kerckhoffs: it knows the sche
 every one is scored the same way, so schemes from different papers become comparable. The method, and which
 published paper reports which number, is in docs/BENCHMARK_METHOD.md.
 
-SCHEMES (re-implemented from the papers in paper/refs.bib; randomness from our Ascon keystream, which only
+SCHEMES (re-implemented from the published papers cited in docs/BENCHMARK_METHOD.md; randomness from our Ascon keystream, which only
 helps them: the originals use AES-OFB, a 10-bit LFSR or unspecified generators)
   plain            standard JPEG (reference: what an unprotected camera leaks)
   E1 .. E4         ours, contract v2 (signs; + DC signs; + AC amplitudes; + DC amplitudes)
@@ -62,7 +62,7 @@ from PIL import Image
 from skimage.metrics import structural_similarity
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT), str(ROOT / "software")]
 sys.path.insert(0, str(ROOT / "experiments"))
 from link.sources import open_source                                         # noqa: E402
 from model import ascon, hw                                                  # noqa: E402
@@ -84,7 +84,7 @@ def selected(s, ac_sign=False, ac_all=False, dc_sign=False, dc_all=False):
 
 
 def xor_fields(symbols, ks, **fields):
-    """model/selective.py :: apply_keystream with an explicit field selection."""
+    """software/model/selective.py :: apply_keystream with an explicit field selection."""
     out = []
     for s in symbols:
         if s.size == 0:
@@ -386,7 +386,7 @@ def perm_items(perm):
 
 def recover_bits(plain, recv, fields):
     """Keystream bits consumed by the XORed fields, in order: clear field XOR received field, read back
-    through model/selective.py :: symbol_mask (bit 0 = top mask bit, the rest = the lower mask bits)."""
+    through software/model/selective.py :: symbol_mask (bit 0 = top mask bit, the rest = the lower mask bits)."""
     bits = []
     for p, c in zip(plain, recv):
         if p.size == 0 or c.size != p.size:

@@ -1,14 +1,14 @@
 """R1 -- where do the encoder's cycles go? (research suite)
 
     python experiments/stall_profile.py                      # 128x96, scene/noise/bars, E0/E2/E4 (~2 min)
-    python experiments/stall_profile.py --size 320x240       # slower, closer to the paper's frames
+    python experiments/stall_profile.py --size 320x240       # slower, closer to the evaluated frame size
     python experiments/stall_profile.py --scaling 64x48 128x96 160x128 320x240   # fit the frame-size law
 
 Finding (14 Oct 2026): cycles/pixel do not depend on the image or the protection level (the entropy
 path never limits), and the excess over 1.5 is ~1/(MCU rows): the DCT waits while the first 16-line
 buffer fills, once per frame. --scaling measures that law and fits cycles/pixel = 1.5 + a / rows.
 
-Runs tb/stall_profile_bench.py on secure_jpeg_top in Icarus and summarises, for every internal
+Runs hardware/tb/stall_profile_bench.py on secure_jpeg_top in Icarus and summarises, for every internal
 valid/ready link, the share of frame cycles with a transfer, a stall (consumer busy) and a starve
 (producer empty). The floor for this architecture is 1.5 cycles/pixel (4:2:0 gives 1.5 samples per
 pixel, the DCT takes one per clock); the table says how far each frame is above it and which link
@@ -94,10 +94,10 @@ def main():
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     if a.scaling:
-        sys.path.insert(0, str(ROOT / "tb"))
+        sys.path.insert(0, str(ROOT / "hardware" / "tb"))
         return scaling(a.scaling)
     os.environ.update(PROFILE_SIZE=a.size, PROFILE_IMAGES=a.images, PROFILE_MODES=a.modes)
-    sys.path.insert(0, str(ROOT / "tb"))
+    sys.path.insert(0, str(ROOT / "hardware" / "tb"))
     from common import run_sim
     run_sim("secure_jpeg_top", "stall_profile_bench")
     raw = json.loads((OUT / "raw.json").read_text())

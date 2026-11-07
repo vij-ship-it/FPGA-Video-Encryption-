@@ -1,6 +1,6 @@
 """Learned (neural-network) attack on the selective encryption -- the GPU experiment.
 
-Question for the paper: if an eavesdropper trains a network on lots of video,
+Question: if an eavesdropper trains a network on lots of video,
 how much of the picture can it recover WITHOUT the key, per mode? This is the
 strongest attacker we model (in the spirit of the deep sign-retrieval attacks,
 Suzuki et al. arXiv:2209.10712 / 2504.21632, and the optimisation-based sign
@@ -49,7 +49,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT), str(ROOT / "software")]
 from link.sources import open_source                                    # noqa: E402
 from model.jpeg import analyse_frame, package_frame, replacement_attack_jpeg  # noqa: E402
 

@@ -23,7 +23,7 @@ What this script shows (model level; nothing here is an RTL measurement):
     buffers, L lanes at 1 DCT sample/clock each, a fixed cost per segment). For L = 1, B = 2, P = 1
     it reproduces the measured RTL law (experiments/stall_profile.py: 1.5 + a/rows cycles/pixel);
     larger L and P are projections. Area per lane from the Vivado per-block numbers
-    (paper/data/vivado), also a projection.
+    (results/hardware/vivado), also a projection.
 Writes sim_out/parallel_lanes/<name>.json and .md.
 """
 import argparse
@@ -37,7 +37,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path[:0] = [str(ROOT), str(ROOT / "software")]
 from link.sources import open_source                                   # noqa: E402
 from model import ascon                                                # noqa: E402
 from model.container import build_jpeg                                 # noqa: E402
@@ -143,7 +143,7 @@ def simulate(w, h, lanes=1, buffers=2, px_per_clk=1, overlap=False):
 
 def area(lanes):
     """LUT / DSP / BRAM36 for L lanes from the Vivado per-block numbers (projection)."""
-    p = ROOT / "paper" / "data" / "vivado" / "vivado_results.json"
+    p = ROOT / "results" / "hardware" / "vivado" / "vivado_results.json"
     if not p.exists():
         return None
     r = next(x for x in json.loads(p.read_text()) if x["name"] == "secure_jpeg_top")
