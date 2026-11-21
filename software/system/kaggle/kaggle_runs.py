@@ -12,11 +12,13 @@ are in the docstring at the start of its block.
                      video identification from frame sizes                       (17 Oct, ~2-3 h, CPU only)
   JOB = "benchmark"  SVE-Bench: ours and four published schemes under the same four attacks, every
                      source                                                       (17 Oct, ~30-45 min, CPU only)
+  JOB = "review"     ICCE 2027 review: E5 against size matching with an earlier E2 frame, and
+                     SVE-Bench on the six standard Xiph CIF sequences          (21 Nov, ~1 h, CPU only)
 
 The first four have been run; their results are in results/ (simulation, extra, research, final).
 Each block below is the original script, byte for byte apart from the indentation.
 """
-JOB = "benchmark"
+JOB = "review"
 
 # ==================================================================================================
 # JOB = "complete"   (was software/system/kaggle/kaggle_complete.py)
@@ -1278,5 +1280,153 @@ QUICK = True: 3-minute smoke test.
     print(f"\n{len(LOG) - len(fails)} passed, {len(fails)} failed, {(time.time() - T_START) / 3600:.2f} h")
     print("Download benchmark_results.zip from the Output tab.")
 
+# ==================================================================================================
+# JOB = "review"   (ICCE 2027 camera-ready, 21 Nov 2026)
+# ==================================================================================================
+elif JOB == "review":
+    """Two runs for the ICCE 2027 reviewers' points.
+(1) experiments/e5_size_match.py: the eavesdropper keeps the last E2 frame before the policy switches to
+    E5 and places every E5 segment by matching its size and non-zero counts to that frame (Reviewer 1,
+    question 3). Every source: 4 switch points, E5 frames 1, 2, 5, 10 and 25 frames after the switch.
+(2) experiments/benchmark_suite.py on the six standard Xiph CIF sequences (akiyo, foreman, news,
+    hall_monitor, mobile, mother_daughter) at 320x240, so the security evaluation is not only on our own
+    clips (Reviewer 2, generalisability).
+Sources for (1): synthetic, the six Xiph sequences, the Sintel trailer, Tears of Steel, and every video in
+your Kaggle inputs (optional: + Add Input -> your clips dataset).
+
+HOW TO RUN: Internet ON, Accelerator None (CPU), paste this whole file into ONE cell,
+Save Version -> Save & Run All (Commit), then send review_results.zip from the Output tab.
+QUICK = True: 3-minute smoke test. If one account runs out of time, set PART = 1 on one account and
+PART = 2 on another (1: size matching, 2: Xiph benchmark) and send both zips.
+"""
+    QUICK = False
+    PART = 0          # 0 = both parts; 1 = size matching only; 2 = Xiph benchmark only
+    CLONES = [("https://github.com/vij-ship-it/FPGA-Video-Encryption-.git", "claude/project-thread-65c6k0"),
+              ("https://github.com/bnsama29-cloud/FPGA-Video-Encryption-.git", "main"),
+              ("https://github.com/vij-ship-it/FPGA-Video-Encryption-.git", "main")]
+    XIPH = ["akiyo_cif", "foreman_cif", "news_cif", "hall_monitor_cif", "mobile_cif", "mother_daughter_cif"]
+    OPEN_CLIPS = {
+        "sintel_trailer": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
+        "tearsofsteel": "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov",
+    }
+    PARALLEL = 4
+
+    import glob, json, os, pathlib, re, shutil, subprocess, sys, time, urllib.request
+    from concurrent.futures import ThreadPoolExecutor
+
+    T_START = time.time()
+    ON_KAGGLE = os.path.exists("/kaggle")
+    WORK = pathlib.Path(os.environ.get("WORK", "/kaggle/working" if ON_KAGGLE else "/tmp/krwork"))
+    WORK.mkdir(parents=True, exist_ok=True)
+    QUICK = os.environ.get("QUICK", str(QUICK)) == "True"
+    PART = int(os.environ.get("PART", PART))
+    REPO, DATA = WORK / "repo", WORK / "opendata"
+    OUT_SM, OUT_BS = "sim_out/e5_size_match", "sim_out/benchmark_suite_xiph"
+    ENV = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONPATH": f"{REPO}/software:{REPO}"}
+    LOG, SOURCES = [], {}
+
+
+    def sh(cmd, sec, step, tail=16, cwd=None):
+        t0 = time.time()
+        print(f"\n=== [{sec}] {step}   (t = {(t0 - T_START) / 60:.0f} min)\n$ {cmd}", flush=True)
+        p = subprocess.run(cmd, shell=True, cwd=cwd or REPO, env=ENV, capture_output=True, text=True)
+        print("\n".join((p.stdout + p.stderr).strip().splitlines()[-tail:]), flush=True)
+        LOG.append((sec, step, "PASS" if p.returncode == 0 else "FAIL", round(time.time() - t0, 1)))
+        print(f"--> [{sec}] {LOG[-1][2]} in {LOG[-1][3]:.0f} s", flush=True)
+        return p.returncode == 0
+
+
+    def checkpoint():
+        res = WORK / "review_results"
+        shutil.rmtree(res, ignore_errors=True)
+        res.mkdir()
+        for o in (OUT_SM, OUT_BS):
+            if (REPO / o).exists():
+                shutil.copytree(REPO / o, res / pathlib.Path(o).name)
+        if (DATA / "xiph" / "manifest.md").exists():
+            shutil.copy(DATA / "xiph" / "manifest.md", res / "xiph_manifest.md")
+        commit = subprocess.run("git rev-parse HEAD", shell=True, cwd=REPO, capture_output=True, text=True).stdout.strip()
+        (res / "run_log.json").write_text(json.dumps(dict(log=LOG, minutes=round((time.time() - T_START) / 60, 1),
+                                                          quick=QUICK, part=PART, commit=commit, sources=SOURCES), indent=1))
+        shutil.make_archive(str(WORK / "review_results"), "zip", res)
+        print(f"[checkpoint] review_results.zip {round((WORK / 'review_results.zip').stat().st_size / 1e6, 2)} MB", flush=True)
+
+
+    def fetch(url, dest):
+        if dest.exists() and dest.stat().st_size > 0:
+            return True
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=300) as r, open(dest, "wb") as f:
+                shutil.copyfileobj(r, f)
+            return dest.stat().st_size > 1000
+        except Exception as e:
+            print(f"  download failed: {url}: {e}")
+            if dest.exists():
+                dest.unlink()
+            return False
+
+
+    def safe(name):
+        return re.sub(r"[^A-Za-z0-9_-]+", "_", name.strip()).strip("_")
+
+
+    shutil.rmtree(REPO, ignore_errors=True)
+    for url, b in CLONES:
+        if sh(f"git clone --depth 1 -b {b} {url} {REPO}", "setup", f"clone ({b})", cwd=WORK, tail=2) and \
+                (REPO / "experiments" / "e5_size_match.py").exists():
+            break
+        shutil.rmtree(REPO, ignore_errors=True)
+    else:
+        raise SystemExit("no branch with experiments/e5_size_match.py")
+    sh("python -m pip install -q cryptography scikit-image opencv-python-headless pillow tomli numpy scipy",
+       "setup", "pip install", tail=2)
+    DATA.mkdir(exist_ok=True)
+    xiph = XIPH[:2] if QUICK else XIPH
+    sh(f"python software/scripts/get_xiph.py {' '.join(xiph)} --out {DATA}/xiph" + (" --frames 80" if QUICK else ""),
+       "setup", "Xiph sequences", tail=10)
+    for n in xiph:
+        f = DATA / "xiph" / f"{n}.mp4"
+        if f.exists():
+            SOURCES[n] = dict(path=str(f), kind="xiph")
+    if not QUICK:
+        for name, url in OPEN_CLIPS.items():
+            dest = DATA / (name + pathlib.Path(url).suffix)
+            if fetch(url, dest):
+                SOURCES[name] = dict(path=str(dest), kind="film")
+        inputs = [os.environ["CLIPS_DIR"]] if os.environ.get("CLIPS_DIR") else ["/kaggle/input"]
+        for f in sorted({f for r in inputs for e in ("mp4", "mkv", "avi", "mov", "webm")
+                         for f in glob.glob(f"{r}/**/*.{e}", recursive=True)}):
+            SOURCES.setdefault(safe(pathlib.Path(f).stem), dict(path=f, kind="own"))
+    SOURCES = {"synthetic": dict(path="synthetic", kind="synthetic"), **SOURCES}
+    print("sources:", json.dumps(SOURCES, indent=1))
+    checkpoint()
+
+    jobs = []
+    for name, s in SOURCES.items():
+        if PART in (0, 1):
+            # Xiph CIF: 300 frames; films and own clips are longer, so their switch points are further apart
+            step = 10 if QUICK else (60 if s["kind"] in ("xiph", "synthetic") else 400)
+            gaps, starts = ("1 3", 1) if QUICK else ("1 2 5 10 25", 4)
+            size = "160x128" if QUICK else "320x240"
+            jobs.append((name, "size matching",
+                         f"python experiments/e5_size_match.py --video '{s['path']}' --size {size} --gaps {gaps} "
+                         f"--stride 2 --starts {starts} --start-step {step} --name {name} --out {OUT_SM}"))
+        if PART in (0, 2) and s["kind"] == "xiph":
+            n, stride = (3, 5) if QUICK else (20, 10)
+            jobs.append((name, "SVE-Bench",
+                         f"python experiments/benchmark_suite.py --video '{s['path']}' --frames {n} --stride {stride} "
+                         f"--size {'160x128' if QUICK else '320x240'} --name {name} --out {OUT_BS}"))
+    with ThreadPoolExecutor(max_workers=PARALLEL) as ex:
+        list(ex.map(lambda j: sh(j[2], j[0], j[1]), jobs))
+    if PART in (0, 1):
+        sh(f"python experiments/e5_size_match.py --summarise {OUT_SM}", "summary", "size matching, all sources", tail=30)
+    checkpoint()
+    w = max(len(s) for _, s, _, _ in LOG)
+    print("\n" + "\n".join(f"{sec:<20}{s:<{w + 2}}{st:<6}{t:>7.0f} s" for sec, s, st, t in LOG))
+    fails = [f"{sec}: {s}" for sec, s, st, _ in LOG if st != "PASS"]
+    print(f"\n{len(LOG) - len(fails)} passed, {len(fails)} failed, {(time.time() - T_START) / 3600:.2f} h")
+    print("Download review_results.zip from the Output tab.")
+
 else:
-    raise SystemExit(f"unknown JOB {JOB!r}: complete | remaining | research | final | references | benchmark")
+    raise SystemExit(f"unknown JOB {JOB!r}: complete | remaining | research | final | references | benchmark | review")

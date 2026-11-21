@@ -115,3 +115,21 @@ def test_raster_solver_reassembles_large_plain_segments():
     succ = sum(order[b] == order[a] + 1 for a, b in zip(seq, seq[1:])) / (len(seq) - 1)
     assert sorted(seq) == list(range(len(groups)))
     assert succ > 2 / (len(groups) - 1), f"successors {succ:.2f}, chance {1 / (len(groups) - 1):.2f}"
+
+
+def test_e5_size_match_scores_and_reference_points():
+    """experiments/e5_size_match.py: the true order places every segment and leaks like E4 (A3 > 0.3 on the
+    scene), random placement is near chance, and the attacks give a score for every (start, gap)."""
+    import argparse
+    import e5_size_match as sm
+    a = argparse.Namespace(video="synthetic", size="96x64", quality=75, gaps=[1, 3], stride=2, starts=1,
+                           start_step=10, seed=0, name="t", out="unused")
+    res = sm.run(a)
+    rows = res["rows"]
+    assert len(rows) == 2, f"rows: got {len(rows)}, expected 2"
+    for r in rows:
+        assert r["oracle"]["exact"] == 1.0, f"gap {r['gap']}: oracle placed {r['oracle']['exact']:.2f}, expected 1.0"
+        assert r["oracle"]["leak"] > 0.3, f"gap {r['gap']}: oracle leak {r['oracle']['leak']:.2f}, expected > 0.3"
+        for k in sm.ATTACKERS:
+            assert -1 <= r[k]["leak"] <= 1 and 0 <= r[k]["exact"] <= 1, f"gap {r['gap']} {k}: {r[k]}"
+    assert "gain" in res["summary"] and "best_attack.motion" in res["summary"]
