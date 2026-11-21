@@ -133,3 +133,27 @@ def test_e5_size_match_scores_and_reference_points():
         for k in sm.ATTACKERS:
             assert -1 <= r[k]["leak"] <= 1 and 0 <= r[k]["exact"] <= 1, f"gap {r['gap']} {k}: {r[k]}"
     assert "gain" in res["summary"] and "best_attack.motion" in res["summary"]
+
+
+def test_review_numbers_macros(tmp_path, monkeypatch):
+    """experiments/review_numbers.py turns the review run's JSON into the paper's macros, without the
+    synthetic scene in the size-matching numbers."""
+    import json
+    import review_numbers as rn
+    schemes = {n: dict(max_leak=v) for n, v in [("E5 (v2)", 0.01), ("E5 (v3, hw)", 0.03), ("VanDroogenbroeck", 0.99),
+                                                 ("Kishore", 0.73), ("Auer", 0.48), ("Hirose RI=1", 0.75),
+                                                 ("Hirose RI=4", 0.99)]}
+    (tmp_path / "benchmark_suite_xiph").mkdir()
+    (tmp_path / "benchmark_suite_xiph" / "foreman_cif.json").write_text(json.dumps(dict(meta={}, schemes=schemes)))
+    row = dict(best_attack="assign_nz", gain=0.01, e2_old=dict(leak=0.7), oracle=dict(motion=0.4),
+               rank_bytes=dict(leak=0.6, motion=0.0, exact=0.3), assign_nz=dict(leak=0.71, motion=0.02, exact=0.6))
+    (tmp_path / "e5_size_match").mkdir()
+    for name, source in (("clip", "clip.mp4"), ("synthetic", "synthetic")):
+        (tmp_path / "e5_size_match" / f"{name}.json").write_text(json.dumps(dict(source=source, rows=[row, row], summary={})))
+    out = tmp_path / "out"
+    monkeypatch.setattr(sys, "argv", ["review_numbers.py", str(tmp_path), "--out", str(out)])
+    rn.main()
+    tex = (out / "review_numbers.tex").read_text()
+    for want in (r"\newcommand{\XiphEfiveMax}{0.03}", r"\newcommand{\XiphPubMin}{0.48}", r"\newcommand{\XiphPubMax}{0.99}",
+                 r"\newcommand{\SmSources}{1}", r"\newcommand{\SmExact}{60}", r"\newcommand{\SmOld}{0.70}"):
+        assert want in tex, f"missing {want!r} in:\n{tex}"

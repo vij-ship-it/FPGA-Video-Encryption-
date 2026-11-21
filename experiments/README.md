@@ -14,7 +14,7 @@ Each script writes its numbers to `sim_out/` (git-ignored); the snapshot of each
 | `standard_metrics.py` | PSNR, SSIM, entropy, adjacent correlation, NPCR/UACI per level |
 | `learned_attack.py`, `recognition.py` | Trained U-Net attacker (GPU); person detection on the eavesdropper's picture |
 | `sign_recovery.py`, `video_fingerprint.py` | Attacks from the literature: LP sign-bit recovery; video identification from frame sizes |
-| `e5_size_match.py` | E5 against an attacker who places the segments by matching their sizes and non-zero counts to an earlier E2 frame of the same scene (ICCE review) |
+| `e5_size_match.py` | E5 against an attacker who places the segments by matching their sizes and non-zero counts to an earlier E2 frame of the same scene (ICCE review); `review_numbers.py` turns that run's results into the camera-ready's macros |
 | `restart_interval.py`, `chosen_plaintext.py` | E5 restart interval and non-zero counting; chosen-plaintext attack on the shuffle |
 | `stall_profile.py`, `lanes_rtl_throughput.py`, `parallel_lanes.py` | Cycles per pixel and lane throughput in RTL simulation; lane projection |
 | `hw_efficiency.py`, `benchmark_crypto.py`, `pq_kex_cost.py` | Hardware figures of merit; cost per protected frame; cost of the post-quantum key |
