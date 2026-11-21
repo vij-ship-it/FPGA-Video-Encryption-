@@ -10,7 +10,9 @@ Macros
   \\SmExact               % of E5 segments placed exactly by the assignment attacker, pooled
   \\SmLeak, \\SmOld        best size-matching attack's leak; the old E2 frame's own leak (both vs the new frame)
   \\SmGain                mean gain over the old E2 frame [95 % CI]
-  \\SmMotion              "motion correlation a; true order b": does the attacker see what changed
+  \\SmOracle              leak of the true order (what E4 would show: the outline E5's shuffle hides)
+The motion correlation of e5_size_match.py is not a macro: in the review run it was near zero even for the
+true order (-0.01), so it cannot tell an attacker that sees the change from one that does not.
 Every value is computed from the run's JSON files; nothing is typed by hand.
 """
 import argparse
@@ -70,13 +72,11 @@ def main():
         best = [r[r["best_attack"]]["leak"] for r in rows]
         gain = [r["gain"] for r in rows]
         lo, hi = bootstrap_ci(gain)
-        mo = [max(r[k]["motion"] for k in ("rank_bytes", "assign_nz")) for r in rows]
-        mo_true = [r["oracle"]["motion"] for r in rows]
         vals.update(SmSources=str(len(real)),
                     SmExact=f"{100 * np.mean([r['assign_nz']['exact'] for r in rows]):.0f}",
                     SmLeak=f2(np.mean(best)), SmOld=f2(np.mean([r["e2_old"]["leak"] for r in rows])),
-                    SmGain=f"${np.mean(gain):+.2f}$ [${lo:+.2f}$, ${hi:+.2f}$]",
-                    SmMotion=f"motion correlation ${np.mean(mo):.2f}$; true order ${np.mean(mo_true):.2f}$")
+                    SmGain=f"${np.mean(gain):+.3f}$ [${lo:+.3f}$, ${hi:+.3f}$]",
+                    SmOracle=f2(np.mean([r["oracle"]["leak"] for r in rows])))
         src["size_match"] = dict(sources=sorted(real), rows=len(rows), gain_max=float(max(gain)),
                                  per_source={k: v["summary"] for k, v in real.items()})
     if not vals:

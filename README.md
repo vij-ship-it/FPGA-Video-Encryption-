@@ -91,7 +91,7 @@ into one Markdown file; `tests/test_board_results.py` checks that every listed b
 | Format compliance in four decoders | `software/system/figures/format_compliance.py` | `security/first_runs/` |
 | Outline leakage per level, 95 % intervals | `experiments/measure_mode_tradeoff.py` | `security/final/`, `security/extra/` |
 | Benchmark against four published schemes (SVE-Bench) | `experiments/benchmark_suite.py` (method: `docs/BENCHMARK_METHOD.md`) | `security/benchmark/` |
-| E5 against size matching with an earlier E2 frame (review, 21 Nov 2026) | `experiments/e5_size_match.py` (Kaggle `JOB = "review"`; paper macros: `experiments/review_numbers.py`) | `security/review_icce/` (after the run) |
+| E5 against size matching with an earlier E2 frame (review, 21 Nov 2026) | `experiments/e5_size_match.py` (Kaggle `JOB = "review"`; paper macros: `experiments/review_numbers.py`) | `security/review_icce/` |
 | Jigsaw solvers, chosen-plaintext attack | `software/system/attacks/jigsaw_attack.py`, `experiments/chosen_plaintext.py` | `security/final/`, `security/research/` |
 | Sign-bit recovery (linear program), video identification from frame sizes | `experiments/sign_recovery.py`, `experiments/video_fingerprint.py` | `security/references/` |
 | Trained U-Net attacker, person recognition | `experiments/learned_attack.py`, `experiments/recognition.py` | `security/final/`, `security/extra/` |

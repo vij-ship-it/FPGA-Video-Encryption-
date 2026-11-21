@@ -145,7 +145,7 @@ def test_review_numbers_macros(tmp_path, monkeypatch):
                                                  ("Hirose RI=4", 0.99)]}
     (tmp_path / "benchmark_suite_xiph").mkdir()
     (tmp_path / "benchmark_suite_xiph" / "foreman_cif.json").write_text(json.dumps(dict(meta={}, schemes=schemes)))
-    row = dict(best_attack="assign_nz", gain=0.01, e2_old=dict(leak=0.7), oracle=dict(motion=0.4),
+    row = dict(best_attack="assign_nz", gain=0.01, e2_old=dict(leak=0.7), oracle=dict(leak=0.8, motion=0.4),
                rank_bytes=dict(leak=0.6, motion=0.0, exact=0.3), assign_nz=dict(leak=0.71, motion=0.02, exact=0.6))
     (tmp_path / "e5_size_match").mkdir()
     for name, source in (("clip", "clip.mp4"), ("synthetic", "synthetic")):
@@ -155,5 +155,6 @@ def test_review_numbers_macros(tmp_path, monkeypatch):
     rn.main()
     tex = (out / "review_numbers.tex").read_text()
     for want in (r"\newcommand{\XiphEfiveMax}{0.03}", r"\newcommand{\XiphPubMin}{0.48}", r"\newcommand{\XiphPubMax}{0.99}",
-                 r"\newcommand{\SmSources}{1}", r"\newcommand{\SmExact}{60}", r"\newcommand{\SmOld}{0.70}"):
+                 r"\newcommand{\SmSources}{1}", r"\newcommand{\SmExact}{60}", r"\newcommand{\SmOld}{0.70}",
+                 r"\newcommand{\SmOracle}{0.80}"):
         assert want in tex, f"missing {want!r} in:\n{tex}"

@@ -15,6 +15,7 @@ its script.
 | `hardware/yosys/` | Early Yosys resource estimate (superseded by `vivado/`) | `make synth` |
 | `security/final/`, `security/extra/` | Outline leakage per level (95 % intervals), jigsaw solvers, learned attacker, standard metrics, restart interval | `experiments/measure_mode_tradeoff.py`, `software/system/attacks/jigsaw_attack.py`, `experiments/learned_attack.py` |
 | `security/benchmark/` | SVE-Bench: our levels against four published schemes under four attacks | `experiments/benchmark_suite.py` (method: `docs/BENCHMARK_METHOD.md`) |
+| `security/review_icce/` | ICCE 2027 camera-ready: E5 against size matching with an earlier E2 frame (eight real sources), SVE-Bench on the six Xiph CIF sequences, and the paper's macros | `experiments/e5_size_match.py`, `experiments/benchmark_suite.py`, `experiments/review_numbers.py` |
 | `security/references/` | Attacks from the literature: LP sign-bit recovery, video identification from frame sizes | `experiments/sign_recovery.py`, `experiments/video_fingerprint.py` |
 | `security/research/` | Research suite R1-R8 (cycles per pixel, lanes, rate control, size side channel, chosen plaintext) | see `docs/RESEARCH.md` |
 | `security/first_runs/` | Format compliance in standard decoders, software codec baselines, first jigsaw run, visual-security grid | `software/system/figures/format_compliance.py`, `software/system/baselines/bench_software_codecs.py` |

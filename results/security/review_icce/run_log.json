@@ -1,0 +1,160 @@
+{
+ "log": [
+  [
+   "setup",
+   "clone (claude/project-thread-65c6k0)",
+   "PASS",
+   3.2
+  ],
+  [
+   "setup",
+   "pip install",
+   "PASS",
+   4.9
+  ],
+  [
+   "setup",
+   "Xiph sequences",
+   "PASS",
+   46.1
+  ],
+  [
+   "synthetic",
+   "size matching",
+   "PASS",
+   18.8
+  ],
+  [
+   "akiyo_cif",
+   "size matching",
+   "PASS",
+   22.3
+  ],
+  [
+   "foreman_cif",
+   "size matching",
+   "PASS",
+   28.6
+  ],
+  [
+   "news_cif",
+   "size matching",
+   "PASS",
+   26.2
+  ],
+  [
+   "hall_monitor_cif",
+   "size matching",
+   "PASS",
+   27.2
+  ],
+  [
+   "akiyo_cif",
+   "SVE-Bench",
+   "PASS",
+   171.1
+  ],
+  [
+   "mobile_cif",
+   "size matching",
+   "PASS",
+   48.3
+  ],
+  [
+   "foreman_cif",
+   "SVE-Bench",
+   "PASS",
+   231.8
+  ],
+  [
+   "news_cif",
+   "SVE-Bench",
+   "PASS",
+   226.6
+  ],
+  [
+   "mother_daughter_cif",
+   "size matching",
+   "PASS",
+   22.8
+  ],
+  [
+   "sintel_trailer",
+   "size matching",
+   "PASS",
+   21.7
+  ],
+  [
+   "hall_monitor_cif",
+   "SVE-Bench",
+   "PASS",
+   221.7
+  ],
+  [
+   "tearsofsteel",
+   "size matching",
+   "PASS",
+   25.1
+  ],
+  [
+   "mother_daughter_cif",
+   "SVE-Bench",
+   "PASS",
+   131.9
+  ],
+  [
+   "mobile_cif",
+   "SVE-Bench",
+   "PASS",
+   282.7
+  ],
+  [
+   "summary",
+   "size matching, all sources",
+   "PASS",
+   1.2
+  ]
+ ],
+ "minutes": 9.3,
+ "quick": false,
+ "part": 0,
+ "commit": "cdd0eac65d05ac0ae46f8b0bb4468378036a80ce",
+ "sources": {
+  "synthetic": {
+   "path": "synthetic",
+   "kind": "synthetic"
+  },
+  "akiyo_cif": {
+   "path": "/kaggle/working/opendata/xiph/akiyo_cif.mp4",
+   "kind": "xiph"
+  },
+  "foreman_cif": {
+   "path": "/kaggle/working/opendata/xiph/foreman_cif.mp4",
+   "kind": "xiph"
+  },
+  "news_cif": {
+   "path": "/kaggle/working/opendata/xiph/news_cif.mp4",
+   "kind": "xiph"
+  },
+  "hall_monitor_cif": {
+   "path": "/kaggle/working/opendata/xiph/hall_monitor_cif.mp4",
+   "kind": "xiph"
+  },
+  "mobile_cif": {
+   "path": "/kaggle/working/opendata/xiph/mobile_cif.mp4",
+   "kind": "xiph"
+  },
+  "mother_daughter_cif": {
+   "path": "/kaggle/working/opendata/xiph/mother_daughter_cif.mp4",
+   "kind": "xiph"
+  },
+  "sintel_trailer": {
+   "path": "/kaggle/working/opendata/sintel_trailer.mp4",
+   "kind": "film"
+  },
+  "tearsofsteel": {
+   "path": "/kaggle/working/opendata/tearsofsteel.mov",
+   "kind": "film"
+  }
+ }
+}
