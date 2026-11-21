@@ -156,26 +156,28 @@ def _auth(lib, p, sec, key):
     return mode, scan, hmac.compare_digest(out.raw, tag), n_mcu
 
 
-def receive_frame(jpeg, key, guard=None):
+def receive_frame(jpeg, key, guard=None, qtables=None):
     """Same result as software/model/jpeg.py :: receive_frame."""
     lib = _load()
     if lib is None:
-        return mj.receive_frame(jpeg, key, guard)
+        return mj.receive_frame(jpeg, key, guard, qtables)
     try:
         p = parse_jpeg(jpeg)
         sec = p.secure()
     except ValueError:
-        return mj.receive_frame(jpeg, key, guard)
+        return mj.receive_frame(jpeg, key, guard, qtables)
     if sec is None:
-        return mj.receive_frame(jpeg, key, guard)
+        return mj.receive_frame(jpeg, key, guard, qtables)
     key = bytes(key)
     a = _auth(lib, p, sec, key)
     if a is None:
-        return mj.receive_frame(jpeg, key, guard)
+        return mj.receive_frame(jpeg, key, guard, qtables)
     mode, scan, ok, n_mcu = a
     meta, _, sid, ctr, _ = sec
     if not ok:
         return mj.ReceivedFrame(False, "tag-mismatch", mode, sid, ctr)
+    if qtables is not None and not mj.dqt_matches(p, qtables):
+        return mj.ReceivedFrame(False, "dqt-mismatch", mode, sid, ctr)
     status = guard.check(sid, ctr) if guard is not None else "ok"
     if status == "replay":
         return mj.ReceivedFrame(False, "replay", mode, sid, ctr)

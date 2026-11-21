@@ -229,7 +229,7 @@ class ReplayGuard:
 @dataclass
 class ReceivedFrame:
     ok: bool
-    reason: str               # ok | gap | tag-mismatch | replay | no-secure-segment | malformed
+    reason: str               # ok | gap | tag-mismatch | dqt-mismatch | replay | no-secure-segment | malformed
     mode: str = None
     session_id: int = None
     frame_ctr: int = None
@@ -237,7 +237,20 @@ class ReceivedFrame:
     plain_scan: bytes = None
 
 
-def receive_frame(jpeg, key, guard=None):
+def dqt_matches(p, qtables):
+    """True if the frame's DQT tables equal the expected (qy, qc). The tag does not cover the DQT
+    segment, so a receiver that knows the session's quality pins the tables (docs/INTERFACES.md §5)."""
+    try:
+        qy, qc = p.qtables()
+    except (ValueError, KeyError, IndexError):
+        return False
+    ey, ec = qtables
+    return np.array_equal(np.asarray(qy), np.asarray(ey)) and np.array_equal(np.asarray(qc), np.asarray(ec))
+
+
+def receive_frame(jpeg, key, guard=None, qtables=None):
+    """qtables: optional expected (qy, qc), e.g. dct_quant.tables(quality). If given, an authentic
+    frame whose DQT differs is rejected with reason 'dqt-mismatch' before the replay guard sees it."""
     try:
         p = parse_jpeg(jpeg)
     except ValueError as e:
@@ -256,6 +269,8 @@ def receive_frame(jpeg, key, guard=None):
                          auth_data(meta, p.width, p.height, auth_scan))
     if not hmac.compare_digest(expected, tag) or mode is None:
         return ReceivedFrame(False, "tag-mismatch", mode, session_id, ctr)
+    if qtables is not None and not dqt_matches(p, qtables):
+        return ReceivedFrame(False, "dqt-mismatch", mode, session_id, ctr)
     status = guard.check(session_id, ctr) if guard is not None else "ok"
     if status == "replay":
         return ReceivedFrame(False, "replay", mode, session_id, ctr)

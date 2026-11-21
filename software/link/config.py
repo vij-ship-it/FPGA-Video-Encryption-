@@ -60,6 +60,7 @@ DEFAULTS = {
         "heartbeat_s": 0.5,      # authenticated heartbeat period
         "alert_min_gap_s": 0.2,  # rate limit for immediate alerts
         "max_epoch_jump": 4,     # how far the receiver ratchets forward on its own
+        "check_dqt": True,       # reject frames whose DQT differs from sender.quality's tables (bug #52)
         "preview_every": 1,
     },
     "channel": {

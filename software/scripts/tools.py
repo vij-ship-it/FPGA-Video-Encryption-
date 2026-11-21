@@ -313,6 +313,12 @@ for checking the scripts; the reported speed/energy numbers must come from the b
             b = bytearray(jpeg)
             b[k + 21] ^= 0x01                                    # counter LSB
             rec("frame counter changed", not receive_frame(bytes(b), key).ok)
+            b = bytearray(jpeg)
+            dqt = jpeg.find(b"\xff\xdb")
+            b[dqt + 5] = min(255, 2 * b[dqt + 5])                # first luma divisor doubled
+            pinned = p.qtables()                                 # the session's tables (receiver knows the quality)
+            rec("quantisation table changed (DQT), tables pinned (bug #52)",
+                not receive_frame(bytes(b), key, qtables=pinned).ok)
 
         # sequence-level attacks with the replay guard
         def run(seq):

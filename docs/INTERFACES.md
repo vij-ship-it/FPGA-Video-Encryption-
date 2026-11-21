@@ -70,6 +70,14 @@ once per session write KEY0..3, SESSION_ID, SESSION_ID_HI and the 128 QT_DATA va
 
 `SOI, APP0 (JFIF), APP11, DQT (2 tables, zig-zag order), SOF0 (3 comps, Y 2×2, Cb/Cr 1×1), DHT ×4 (Annex K), SOS, scan data, EOI`
 
+What the receiver takes from each header segment (the tag covers only the 26-byte prefix and the scan):
+SOF width and height are in the prefix, so they are authenticated; the DHT is ignored (the receiver always
+decodes with the Annex K tables); the DRI is ignored (the restart layout follows from version and mode, which
+are in the prefix); the DQT is **pinned**: `receive_frame(..., qtables=tables(quality))` rejects an authentic
+frame whose DQT differs with reason `dqt-mismatch`, before the replay guard (bug #52). The link receiver pins
+the tables of `sender.quality` (`receiver.check_dqt`, default on), so both ends must use the same quality.
+Without the pin, a changed DQT would pass the tag and the key holder would see a wrongly scaled picture.
+
 APP11 (marker 0xFFEB) payload, 38 bytes, ignored by normal viewers:
 
 | Bytes | Field | Encoding |
@@ -183,6 +191,7 @@ Not part of the fabric contract; both ends must agree.
 
 | Item | Definition |
 |---|---|
+| `receiver.check_dqt` | `true` (default): the receiver rejects frames whose DQT differs from the tables of `sender.quality` (section 5, bug #52); counted and alerted as a tag failure |
 | `link.pad` | frame-size padding against the size side channel (`software/link/wire.py :: SizePadder`): `none` (default), `bucket:<B>`, `runmax` (pad to the largest frame so far, 256-byte steps), `window:<N>`. Padding = COM segments (`FF FE len 00..`) right after SOI; decoders skip them, the tag does not cover them, the receiver ignores them |
 | `keys.exchange` (`run_all --pq-kex`, `board_sender --pq-kex`, `python -m link.kex`) | hybrid ML-KEM-768 (FIPS 203) + X25519 at session start, authenticated with HMAC-SHA256 under a key derived from the pre-shared key; K_master = HKDF-SHA256(salt = PSK, ikm = ss_mlkem ‖ ss_x25519, info = "SV session" ‖ SHA256(M1 ‖ M2)), 16 bytes. Messages: M1 1268 B (receiver → sender), M2 1172 B, confirm 20 B; UDP port `link.kex` (47006). The result is written to `software/configs/session_key.txt` (git-ignored) and used through `keys.master_file`. `software/link/keys.py :: kex_init / kex_respond / kex_finish` |
 | `link.bus_host`, `link.bus` entries `"ip:port"` | where telemetry goes (`software/link/config.py :: bus_addrs`): a port goes to `bus_host` (or `host` when empty), `"ip:port"` goes where it says. Two-laptop setup: the board and the attacker send video to the attacker laptop but telemetry to the receiver laptop's logger; the attacker also feeds its own dashboard (`127.0.0.1:47010`) |

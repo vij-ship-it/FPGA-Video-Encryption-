@@ -18,6 +18,7 @@ import os
 import time
 
 from model.container import parse_jpeg
+from model.dct_quant import tables as quality_tables
 from .fastrx import receive_frame, verify_frame   # software/model/jpeg.py results, heavy work in C (tests/test_fastrx.py)
 
 from . import config, keys, wire
@@ -46,6 +47,9 @@ class Receiver:
         self.total = self._zero()
         self.last_alert = {}
         self.latency = []
+        # The tag does not cover the DQT segment: pin the tables of the session's quality, so a
+        # changed DQT is an integrity failure instead of a silently wrong picture (bug #52).
+        self.qtables = quality_tables(cfg["sender"]["quality"]) if r.get("check_dqt", True) else None
 
     @staticmethod
     def _zero():
@@ -125,9 +129,9 @@ class Receiver:
                 self._alert("tag-fail")
                 self.bus.event("frame", verdict="tag-mismatch", ctr=ctr, epoch=epoch)
             return
-        r = receive_frame(jpeg, key)                     # tag check + decrypt
+        r = receive_frame(jpeg, key, qtables=self.qtables)   # tag + DQT check, decrypt
         if not r.ok:
-            kind = "tag_fail" if r.reason == "tag-mismatch" else "malformed"
+            kind = "tag_fail" if r.reason in ("tag-mismatch", "dqt-mismatch") else "malformed"
             self._count(kind)
             self._alert(kind.replace("_", "-"))
             self.bus.event("frame", verdict=r.reason, ctr=ctr, epoch=epoch)
